@@ -1,0 +1,14 @@
+# Force LF line endings for all text files in this Linux dotfiles repo
+# This prevents CRLF corruption when editing on Windows
+
+* text=auto eol=lf
+
+# Explicitly mark binary files
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
