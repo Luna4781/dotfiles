@@ -64,6 +64,12 @@ uwsm
 walker
 waybar
 zenity
+cliphist
+wl-clipboard
+playerctl
+ddcutil
+networkmanager
+network-manager-applet
 
 # Screen Recording & Video
 ffmpeg
