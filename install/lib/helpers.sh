@@ -171,6 +171,16 @@ has_nvidia_gpu() {
     lspci | grep -i nvidia &>/dev/null
 }
 
+keep_sudo_alive() {
+    # Update the sudo timestamp every 60 seconds
+    while true; do
+        sudo -v
+        sleep 60
+        kill -0 "$$" || exit
+    done 2>/dev/null &
+    SUDO_PID=$!
+}
+
 remove_path() {
     local target="$1"
 
@@ -178,5 +188,12 @@ remove_path() {
         rm -f "$target"
     elif [ -e "$target" ]; then
         rm -rf "$target"
+    fi
+}
+get_aur_helper() {
+    if command -v paru &>/dev/null; then
+        echo "paru"
+    else
+        echo "yay"
     fi
 }

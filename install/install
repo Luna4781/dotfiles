@@ -27,8 +27,17 @@ ensure_gum
 
 # Authenticate sudo early to cache credentials
 sudo -v
+keep_sudo_alive
+trap 'kill $SUDO_PID 2>/dev/null' EXIT
 
-_installYay() {
+_ensureAURHelper() {
+  if command -v yay &>/dev/null || command -v paru &>/dev/null; then
+    log_success "AUR helper detected"
+    return 0
+  fi
+
+  log_info "No AUR helper detected. Installing yay..."
+  
   if ! is_installed "base-devel"; then
     log_info "Installing base-devel..."
     sudo pacman --noconfirm -S base-devel
@@ -50,6 +59,8 @@ _installYay() {
 }
 
 _installPackages() {
+  local helper=$(get_aur_helper)
+  
   local total=$(grep -v '^#' "$1" | grep -v '^$' | wc -l)
   local current=0
   local failed_packages=()
@@ -65,21 +76,20 @@ _installPackages() {
     fi
 
     # Try to install, handle conflicts gracefully
-    if spinner "Installing $pkg... [$current/$total]" yay --noconfirm --needed -S "${pkg}" 2>&1; then
+    if spinner "Installing $pkg... [$current/$total]" $helper --noconfirm --needed -S "${pkg}" 2>&1; then
       log_success "$pkg"
     else
       log_error "Failed to install: $pkg"
       failed_packages+=("$pkg")
     fi
   done <"$1"
-
   # Report failed packages at the end
   if [ ${#failed_packages[@]} -gt 0 ]; then
     log_error "The following packages failed to install:"
     for pkg in "${failed_packages[@]}"; do
       log_detail "$pkg"
     done
-    log_info "You can try installing them manually with: yay -S <package_name>"
+    log_info "You can try installing them manually with: $helper -S <package_name>"
   fi
 }
 
@@ -87,14 +97,12 @@ clear
 log_header "Dotfiles Installation"
 
 START_TIME=$(date +%s)
-TOTAL_STEPS=8
+TOTAL_STEPS=9
 CURRENT_STEP=0
 
-if ! is_installed "yay"; then
-  CURRENT_STEP=$((CURRENT_STEP + 1))
-  log_step "[$CURRENT_STEP/$TOTAL_STEPS] Installing yay AUR helper"
-  _installYay
-fi
+CURRENT_STEP=$((CURRENT_STEP + 1))
+log_step "[$CURRENT_STEP/$TOTAL_STEPS] Ensuring AUR helper"
+_ensureAURHelper
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
 log_step "[$CURRENT_STEP/$TOTAL_STEPS] Installing packages"

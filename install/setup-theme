@@ -36,3 +36,7 @@ gsettings set org.gnome.desktop.interface font-name 'CaskaydiaMono Nerd Font Mon
 gsettings set org.gnome.desktop.interface monospace-font-name 'CaskaydiaMono Nerd Font Mono 11'
 
 log_success "Initial theme set (everforest)"
+
+log_info "Generating dynamic theme assets..."
+"$DOTFILES_DIR/bin/theme-set" everforest
+log_success "Dynamic theme assets generated"

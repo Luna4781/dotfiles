@@ -19,27 +19,109 @@ else
 fi
 
 HARDWARE=$(detect_hardware_type)
+HELPER=$(get_aur_helper)
 if [ "$HARDWARE" = "laptop" ]; then
-  spinner "Installing brightnessctl..." yay --noconfirm -S brightnessctl
+  spinner "Installing brightnessctl..." $HELPER --noconfirm -S brightnessctl
   KEYBIND_CONF="laptop-keybindings.conf"
   log_detail "Detected laptop hardware"
 else
-  spinner "Installing ddcutil..." yay --noconfirm -S ddcutil
+  spinner "Installing ddcutil..." $HELPER --noconfirm -S ddcutil
   KEYBIND_CONF="desktop-keybindings.conf"
   log_detail "Detected desktop hardware"
 fi
 
-# Remove any existing env/keybinding lines first
-sed -i '/source = .*\/\(nvidia-env\.conf\|env\.conf\)$/d' "$HYPRLAND_CONF"
-sed -i '/source = .*\/\(laptop-keybindings\.conf\|desktop-keybindings\.conf\)$/d' "$HYPRLAND_CONF"
-
-# Insert correct ones for current hardware
-sed -i "/source = .*autostart\\.conf/a source = ~/.local/share/dotfiles/default/hypr/conf/${ENV_CONF}\\nsource = ~/.local/share/dotfiles/default/hypr/conf/${KEYBIND_CONF}" "$HYPRLAND_CONF"
+# Copy the hardware specific templates to the static locations Hyprland expects
+mkdir -p "$HOME/.config/hypr/conf"
+cp -f "$DOTFILES_DIR/default/hypr/conf/${ENV_CONF}" "$HOME/.config/hypr/conf/env.conf"
+cp -f "$DOTFILES_DIR/default/hypr/conf/${KEYBIND_CONF}" "$HOME/.config/hypr/conf/keybindings.conf"
 
 log_success "Hardware-specific configuration applied"
 
+# ===== Keyboard Layout Selection =====
+log_info "Setting up keyboard layout..."
+
+LAYOUTS=(
+  "us:US English"
+  "pl:Polish"
+  "sk:Slovak"
+  "jp:Japanese"
+  "gb:UK English"
+  "de:German"
+  "fr:French"
+  "es:Spanish"
+  "it:Italian"
+  "pt:Portuguese"
+  "ru:Russian"
+  "cz:Czech"
+  "se:Swedish"
+  "no:Norwegian"
+  "dk:Danish"
+  "fi:Finnish"
+  "nl:Dutch"
+  "br:Brazilian Portuguese"
+  "kr:Korean"
+  "cn:Chinese"
+  "tr:Turkish"
+  "hu:Hungarian"
+  "ro:Romanian"
+  "ua:Ukrainian"
+  "latam:Latin American Spanish"
+)
+
+INPUT_CONF="$HOME/.config/hypr/conf/input.conf"
+
+if _has_gum; then
+  LAYOUT_OPTIONS=()
+  for entry in "${LAYOUTS[@]}"; do
+    code="${entry%%:*}"
+    name="${entry#*:}"
+    LAYOUT_OPTIONS+=("$code - $name")
+  done
+
+  SELECTED=$(printf '%s\n' "${LAYOUT_OPTIONS[@]}" | gum choose --header "Select your keyboard layout:" --height 20) || true
+
+  if [ -n "$SELECTED" ]; then
+    KB_LAYOUT=$(echo "$SELECTED" | awk '{print $1}')
+  else
+    KB_LAYOUT="us"
+  fi
+else
+  echo ""
+  echo "Available keyboard layouts:"
+  local i=1
+  for entry in "${LAYOUTS[@]}"; do
+    code="${entry%%:*}"
+    name="${entry#*:}"
+    echo "  $i) $code - $name"
+    i=$((i + 1))
+  done
+  echo ""
+  read -p "Enter layout code (e.g. us, pl, sk, jp) [default: us]: " KB_LAYOUT
+  KB_LAYOUT="${KB_LAYOUT:-us}"
+fi
+
+# Write the input config
+cat > "$INPUT_CONF" <<EOF
+input {
+    kb_layout = $KB_LAYOUT
+    kb_variant =
+    kb_model =
+    kb_options =
+    kb_rules =
+
+    follow_mouse = 1
+
+    sensitivity = 0
+    touchpad {
+        natural_scroll = false
+    }
+}
+EOF
+
+log_success "Keyboard layout set to: $KB_LAYOUT"
+
 # Auto-configure monitors if Hyprland is running
-if command -v hyprctl &>/dev/null && hyprctl monitors &>/dev/null; then
+if command -v hyprctl &>/dev/null && hyprctl monitors &>/dev/null 2>&1; then
   log_info "Detecting monitor configuration..."
 
   MONITORS_CONF="$HOME/.config/hypr/conf/monitors.conf"
