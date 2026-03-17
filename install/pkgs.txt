@@ -39,7 +39,7 @@ hyprland
 hyprland-guiutils
 hyprlang
 hyprlock
-hyprpaper
+swww
 hyprpicker
 hyprtoolkit
 hyprutils

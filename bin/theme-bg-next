@@ -18,7 +18,7 @@ TOTAL=${#BACKGROUNDS[@]}
 
 if [[ $TOTAL -eq 0 ]]; then
   notify-send "No background was found for theme" -t 2000
-  hyprctl hyprpaper unload all
+  swww clear 2>/dev/null || true
 
 else
   if [[ -L "$CURRENT_BACKGROUND_LINK" ]]; then
@@ -43,8 +43,5 @@ else
   fi
 
   ln -nsf "$NEW_BACKGROUND" "$CURRENT_BACKGROUND_LINK"
-
-  hyprctl monitors -j | jq -r '.[].name' | while read -r monitor; do
-    hyprctl hyprpaper reload "$monitor,$NEW_BACKGROUND"
-  done
+  swww img "$NEW_BACKGROUND" --transition-type fade --transition-duration 1
 fi

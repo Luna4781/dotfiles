@@ -142,7 +142,6 @@ USER_SERVICES=(
   "swayosd.service"
   "walker.service"
   "waybar.service"
-  "hyprpaper.service"
 )
 
 for service in "${USER_SERVICES[@]}"; do
