@@ -114,7 +114,7 @@ cat >"$HOME/.config/tinte/settings.json" <<EOF
   "exportThemeLocation": "$HOME/.config/tinte/exported-themes",
   "applyThemeLocation": "$HOME/.local/share/dotfiles/themes/tinte",
   "colorBackend": "imagemagick",
-  "wallpaperBackend": "hyprpaper"
+  "wallpaperBackend": "script"
 }
 EOF
 log_detail "Tinte config created/updated"
