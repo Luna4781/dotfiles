@@ -60,14 +60,12 @@ backup_file() {
   }
 
   if [[ "$source_path" =~ ^"$HOME" ]]; then
-    cp -rP "$source_path" "$backup_path" || {
-      echo "ERROR: Failed to backup: $source_path" >&2
-      return 1
+    cp -rP "$source_path" "$backup_path" 2>/dev/null || {
+      echo "WARNING: Partial or failed backup for: $source_path (might be a broken symlink)" >&2
     }
   else
-    sudo cp -rP "$source_path" "$backup_path" || {
-      echo "ERROR: Failed to backup: $source_path" >&2
-      return 1
+    sudo cp -rP "$source_path" "$backup_path" 2>/dev/null || {
+      echo "WARNING: Partial or failed backup for: $source_path (might be a broken symlink)" >&2
     }
   fi
 
